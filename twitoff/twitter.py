@@ -5,7 +5,7 @@ import basilica
 import os
 from dotenv import load_dotenv
 
-from .models import DB, Tweet, User, TWITTER_USERS
+from .models import DB, Tweet, User
 
 load_dotenv()
 
@@ -20,6 +20,12 @@ TWITTER_AUTH = tweepy.OAuthHandler(
 TWITTER = tweepy.API(TWITTER_AUTH)
 
 BASILICA = basilica.Connection(BASILICA_KEY)
+
+
+TWITTER_USERS = ['calebhicks', 'elonmusk', 'rrherr', 'SteveMartinToGo',
+                 'alyankovic', 'nasa', 'sadserver', 'jkhowland', 'austen',
+                 'common_squirrel', 'KenJennings', 'conanobrien',
+                 'big_ben_clock', 'IAM_SHAKESPEARE']
 
 
 def add_or_update_user(username):
@@ -52,9 +58,9 @@ def add_or_update_user(username):
 
 def add_users(users=TWITTER_USERS):
     """Add/update a list of users."""
-    # for user in users:
-    #     add_or_update_user(user)
-    add_or_update_user(users[0])
+    for user in users:
+        add_or_update_user(user)
+    # add_or_update_user(users[0])
 
 
 def update_all_users():

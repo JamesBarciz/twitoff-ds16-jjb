@@ -6,15 +6,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 DB = SQLAlchemy()
 
-TWITTER_USERS = ['calebhicks', 'elonmusk', 'rrherr', 'SteveMartinToGo',
-                 'alyankovic', 'nasa', 'sadserver', 'jkhowland', 'austen',
-                 'common_squirrel', 'KenJennings', 'conanobrien',
-                 'big_ben_clock', 'IAM_SHAKESPEARE']
-
-TWITTER_TWEETS = ['Lol, whatever!', 'Hello!', 'No way!', 'GTFO', 'Hi!',
-                  'Hey', 'dsajk', 'awlk', 'dajwdia', 'awihajiw', 'wah',
-                  'weikajdo', 'wiadawjao', 'fourteen']
-
 
 class User(DB.Model):
     """Twitter users."""
@@ -38,16 +29,3 @@ class Tweet(DB.Model):
 
     def __repr__(self):
         return f'[Tweet: {self.text}]'
-
-
-def add_test_users():
-    for i, name in enumerate(TWITTER_USERS):
-        user = User(id=i, name=name)
-        DB.session.add(user)
-    DB.session.commit()
-
-def add_test_tweets():
-    for i, text in enumerate(TWITTER_TWEETS):
-        tweet = Tweet(id=i, full_text=text)
-        DB.session.add(tweet)
-    DB.session.commit()

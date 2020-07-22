@@ -1,46 +1,72 @@
 """Main app/routing file for TwitOff."""
 
 # Package imports
-from flask import Flask, render_template
+import os
+from dotenv import load_dotenv
+from flask import Flask, render_template, request
 
 # Local imports
-from .models import DB, User, Tweet, add_test_users, add_test_tweets
-from .twitter import add_users
+from .models import DB, User, Tweet
+from .predict import predict_user
+from .twitter import add_or_update_user, update_all_users
 
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def create_app():
     """Creates and configures an instance of the Flask application."""
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     DB.init_app(app)
 
     @app.route('/')
     def root():
-        return render_template('base.html')
-    
-    @app.route('/add_test_users')
-    def add_users():
-        DB.drop_all()
-        DB.create_all()
-        add_test_users()
-        return 'Users added!'
-    
-    @app.route('/add_test_tweets')
-    def add_tweets():
-        DB.drop_all()
-        DB.create_all()
-        add_test_tweets()
-        return 'Tweets added!'
+        return render_template('base.html', title='Home',
+                               users=User.query.all())
 
-    @app.route('/view_test_users')
-    def view_users():
-        users = User.query.all()
-        return '<br/>'.join([str(user) for user in users])
-    
-    @app.route('/view_test_tweets')
-    def view_tweets():
-        tweets = Tweet.query.all()
-        return '<br/>'.join([str(tweet) for tweet in tweets])
+    @app.route('/compare', methods=['POST'])
+    def compare(message=''):
+        user1, user2 = sorted([request.values['user1'],
+                               request.values['user2']])
+        if user1 == user2:
+            message = 'Cannot compare a user to themselves!'
+        else:
+            prediction = predict_user(user1, user2,
+                                      request.values['tweet_text'])
+            message = '"{}" is more likely to be said by {} than {}'.format(
+                request.values['tweet_text'], user1 if prediction else user2,
+                user2 if prediction else user1
+            )
+        return render_template('prediction.html', title='Prediction',
+                               message=message)
+
+    @app.route('/user', methods=['POST'])
+    @app.route('/user/<name>', methods=['GET'])
+    def user(name=None, message=''):
+        name = name or request.values['user_name']
+        try:
+            if request.method == 'POST':
+                add_or_update_user(name)
+                message = "User {} successfully added!".format(name)
+            tweets = User.query.filter(User.name == name).one().tweets
+        except Exception as e:
+            message = "Error adding {}: {}".format(name, e)
+            tweets = []
+        return render_template('user.html', title=name, tweets=tweets,
+                               message=message)
+
+    @app.route('/reset')
+    def reset():
+        DB.drop_all()  # Reset the DB
+        DB.create_all()
+        return render_template('base.html', title='Reset database!')
+
+    @app.route('/update')
+    def update():
+        update_all_users()
+        return render_template('base.html', users=User.query.all(),
+                               title='All users and tweets updated!')
 
     return app
