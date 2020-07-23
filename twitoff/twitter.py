@@ -9,13 +9,13 @@ from .models import DB, Tweet, User
 
 load_dotenv()
 
-API_KEY = os.getenv("TWITTER_API_KEY")
-API_SECRET_KEY = os.getenv("TWITTER_API_SECRET")
+TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
+TWITTER_API_SECRET = os.getenv("TWITTER_API_SECRET")
 BASILICA_KEY = os.getenv("BASILICA_KEY")
 
 TWITTER_AUTH = tweepy.OAuthHandler(
-    API_KEY,
-    API_SECRET_KEY
+    TWITTER_API_KEY,
+    TWITTER_API_SECRET
 )
 TWITTER = tweepy.API(TWITTER_AUTH)
 
