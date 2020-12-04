@@ -2,11 +2,11 @@
 
 # Package imports
 import numpy as np
+import spacy
 from sklearn.linear_model import LogisticRegression
 
 # Local imports
-# from .models import User
-# from .twitter import BASILICA
+from .models import User
 
 
 def predict_user(user1_name, user2_name, tweet_text):
@@ -28,8 +28,9 @@ def predict_user(user1_name, user2_name, tweet_text):
     # Fit a LogisticRegression model on X and y
     log_reg = LogisticRegression().fit(embeddings, labels)
 
-    # Embed the tweet_text using Basilica to use with predictive model
-    tweet_embedding = BASILICA.embed_sentence(tweet_text, model='twitter')
+    # Embed the tweet_text using SpaCy vectorizer to use with predictive model
+    nlp = spacy.load('en_core_web_lg')
+    tweet_embedding = nlp(tweet_text).vector
 
     # Return the predicted label
     # [0.] = user1  //  [1.] = user2
