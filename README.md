@@ -3,7 +3,7 @@ A Flask web application which aims to predict, between two Twitter users, who is
 
 ## Tech Stack
 ---
-This application is primarily written in *Python* however, the webpages are written with *HTML incorporating Python*.  
+This application is primarily written in *Python 3.7* however, the webpages are written with *HTML incorporating Python*.  
 
 *Tweepy* is used in this application (in tandem with developer API access) to connect to the Twitter API to obtain user Tweets.
 
@@ -26,6 +26,7 @@ Finally, the model used to predict Twitter users is a simple *Logistic Regressio
 │   │    ├─ prediction.html   → Prediction Page
 │   │    └─ user.html         → User Tweets Page
 │   │
+│   ├─ __init__.py
 │   ├─ app.py                 → Main Application
 │   ├─ hello.py
 │   ├─ models.py              → SQLAlchemy Model
@@ -42,3 +43,84 @@ Finally, the model used to predict Twitter users is a simple *Logistic Regressio
 ├─ TwitOff Database Entity Relationship Diagram.pdf
 └─ requirements.txt
 ```
+
+## Running the Application (Reproducibility)
+---
+### Prerequisites
+To run this application, you will need Twitter Developer credentials which an be obtained by submitting an application [here](https://developer.twitter.com/en).  Once the application is able to exist on Heroku, I will provide a link in this document.
+
+I would also recommend setting up a free (20MB) PostreSQL instance through [ElephantSQL.com](https://www.elephantsql.com/) and obtaining a database URL to use in your `.env` file.
+
+### Spinning up the Flask Application
+You will need to create a virtual enviromnent.  For this application, we used *Pipenv*.
+    
+1. Clone the repository locally using: `git clone https://github.com/JamesBarciz/twitoff-ds16-jjb.git`
+2. Use the command `pipenv shell` to activate the Pip environment.  Since this repository contains both a `Pipfile` and `requirements.txt` the command should recognize either file and install the proper packages.
+    - Side Note: You will need to install one of the SpaCy english models.  Accomplish this by running in the terminal:
+        - `python -m spacy download en_core_web_lg`
+        - If this is causing errors, you will have to go for one of the lesser models [found on SpaCy's website](https://spacy.io/models/en) - simply replace `en_core_web_lg` with `en_core_web_md` or `en_core_web_sm`
+3. Create a `.env` file which will house all of your environment variables which is necessary for each of these items (but not limited to) this list... keep in mind to run the code as is the variables **must be named exactly as such**:
+
+    - TWITTER_API_KEY
+    - TWITTER_API_SECRET
+    - TWITTER_ACCESS_TOKEN
+    - TWITTER_ACCESS_TOKEN_SECRET
+    - DATABASE_URL
+
+4. Depending on your system, you will need to set the Flask application variable in one of two ways.
+    
+    - Windows: `set FLASK_APP=twitoff:APP`
+    - Mac: `export FLASK_APP=twitoff:APP`
+
+5. Test out your application first by executing `flask shell` which will take you into a Python REPL within your Flask application.  Next, follow these steps to test out your database:
+
+    - `from twitoff.twitter import TWITTER`
+    - `from twitoff.models import DB, User, Tweet`
+    - `import spacy`
+    - ***`DB.drop_all()`* - only perform this if you already created the database
+    - `DB.create_all()`
+    - `username = 'alyankovic'` - or, another username
+    - `twitter_user = TWITTER.get_user(username)`
+    - `tweets = twitter_user.timeline(count=200, include_replies=False, include_rts=False`
+    - `nlp = spacy.load('en_core_web_lg')` - remember to replace `lg` with the proper model downloaded from SpaCy.io
+    - `db_user = User(name=username)` - this will be used to populate the `user` table
+    - `for tweet in tweets:`
+        - `text = tweet.text`
+        - `embedding = list(nlp(text).vector)`
+        - `db_tweet = Tweet(id=tweet.id, tweet=text, embedding=embedding)`
+        - `db_user.tweets.append(db_tweet)` - this uses the `backref` parameter we set in the `tweet` table
+    - `DB.session.add(db_user)` - this will add the user to the `user` table and their Tweets to the `tweet` table
+    - `DB.session.commit()` - don't forget to commit!
+
+6. Lastly, connect to your PostgreSQL instance.
+- If you generated this through ElephantSQL, follow these directions:
+    - Log into ElephantSQL.com
+    - Choose the instance name you created
+    - On the left dashboard, choose the third option down called `BROWSER`
+    - In the SQL Browser, click the `Table queries` drop-down menue and you should see two tables:
+        - `user (public)`
+        - `tweet (public)`
+    - These are your tables you generated with the ORM *SQLAlchemy*
+- If you have a local browser such as [Tableplus](https://tableplus.com/) (free version is fine) you can provide information from your instance dashboard to connect to this instance.
+
+### Post Setup
+If this process works, you can open the application locally by running `flask run`
+ - you should be provided a link to take you to your local host 
+ - copy/paste the link in the web browser and you should see the application!
+
+The base route of the application should show you have one user in the database if you followed the prerequisites.  To add another user, type another Twitter username in the text box and click `Add User`.  This could take several minutes because the application is obtaining the last 200 Tweets that user has made.  When the process is complete, you will be directed to the route `/user/<username>` which displays their username in bold as well as the obtained Tweets.  They should now be present in your database!
+
+After adding another user, go back to the base route and click the two Twitter users on the opposite drop-down menues.
+
+Next, to test out the predictive model, copy/paste a Tweet that was made by one of the Twitter users into the text box that says: `"Tweet text to predict"` then, click `Compare Users`
+
+Because we trained the model on the embeddings of both user's Tweets, copy/pasting an exact Tweet should be a 100% match for that user thus, displaying an output in this format:
+- `"<PREDICTED_TEXT> is more likely to be said by <USER_A> than <USER_B>"`
+
+As stated before, this model uses *Logistic Regression*.  Similarly to *Linear Regression*, which aims to predict a continuous variable such as stock price or some value, Logistic Regression classifies a prediction to be either True or False - User A or User B respectively.  Rather than give an exact answer User A or User B, Logistic Regression fits a *sigmoid* curve on a graph between 0 and 1.  If the prediction is greater than the threshold (likely >= 0.5), it is True, if less than the threshold, it is False.
+
+For a more-detailed explanation, check out [some notes I took](https://docs.google.com/document/d/1U3GQTPF2JY8DY9y6kqiH2gVc2OuKo888QBdwybhgHW0/edit?usp=sharing) on a [StatQuest video on Logistic Regression](https://www.youtube.com/watch?v=yIYKR4sgzI8)!
+
+## Questions
+---
+Questions can be directed to my email jamesjbarciz@gmail.com.  I am generally quick to respond depending on work schedule!

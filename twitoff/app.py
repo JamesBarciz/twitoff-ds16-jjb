@@ -2,7 +2,7 @@
 
 # Package imports
 import os
-from dotenv import load_dotenv
+from decouple import config
 from flask import Flask, render_template, request
 
 # Local imports
@@ -10,9 +10,8 @@ from .models import DB, User, Tweet
 from .predict import predict_user
 from .twitter import add_or_update_user, update_all_users
 
-load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = config('DATABASE_URL')
 
 def create_app():
     """Creates and configures an instance of the Flask application."""
