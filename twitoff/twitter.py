@@ -27,7 +27,7 @@ def add_or_update_user(username):
         twitter_user = TWITTER.get_user(username)
         db_user = (User.query.get(twitter_user.id) or
                    User(id=twitter_user.id, name=username))
-        DB.session.add(db_user)
+        # DB.session.add(db_user)
         # We want as many recent non-retweet/reply statuses as we can get
         # 200 is a Twitter API limit, we'll usually see less due to exclusions
         tweets = twitter_user.timeline(
@@ -41,7 +41,7 @@ def add_or_update_user(username):
             db_tweet = Tweet(id=tweet.id, text=text,
                              embedding=embedding)
             db_user.tweets.append(db_tweet)
-            DB.session.add(db_tweet)
+            DB.session.add(db_user)
     except Exception as e:
         print(f'Error processing {username}: {e}')
         raise e
