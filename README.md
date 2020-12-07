@@ -11,7 +11,7 @@ The microframework used to build this application is *Flask* and eventually, wit
 
 The database is a *PostgreSQL* server generated through Heroku's *hobbydev* option and hosted with *AWS*.
 
-This application also uses *Flask SQLAlchemy* which is an ORM (object-relational-mapper) that assists in the creation of the database and insertion of data via the front-end.
+This application also uses *Flask SQLAlchemy* which is an ORM (object-relational-mapper) that assists in the creation of the database and insertion of data via the front-end.  To view the schema SQLAlchemy will produce, check out the simple [Entity Relationship Diagram I made for this application](https://github.com/JamesBarciz/twitoff-ds16-jjb/blob/master/TwitOff%20Database%20Entity%20Relationship%20Diagram.pdf)
 
 User Tweets are stored as embeddings in the Postgres database and are processed using NLP (Natural Language Processing) with *SpaCy*'s word vectorizer and *en_core_web_lg* model.  Formerly, Tweets were embedded using *Basilica* and code can be changed to facilitate this should Basilica.ai become accessible again.
 
@@ -107,6 +107,7 @@ You will need to create a virtual enviromnent.  For this application, we used *P
 If this process works, you can open the application locally by running `flask run`
  - you should be provided a link to take you to your local host 
  - copy/paste the link in the web browser and you should see the application!
+ - To view the processes in this application, check out my [Application Architecture map](https://github.com/JamesBarciz/twitoff-ds16-jjb/blob/master/TwitOff%20Application%20Architecture.pdf)
 
 The base route of the application should show you have one user in the database if you followed the prerequisites.  To add another user, type another Twitter username in the text box and click `Add User`.  This could take several minutes because the application is obtaining the last 200 Tweets that user has made.  When the process is complete, you will be directed to the route `/user/<username>` which displays their username in bold as well as the obtained Tweets.  They should now be present in your database!
 
